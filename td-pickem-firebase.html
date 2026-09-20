@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TD Pick 'Em League</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1B222C;
+    --panel:#242C38;
+    --panel-raised:#2C3542;
+    --border:#3A4453;
+    --border-soft:#333C4A;
+    --ink:#F2F5F7;
+    --muted-ink:#98A5B5;
+    --teal:#48D1CC;
+    --teal-dark:#33ADA8;
+    --teal-bright:#7BE0DC;
+    --teal-soft:rgba(72,209,204,0.16);
+    --red-flag:#FF6B6B;
+    --red-soft:rgba(255,107,107,0.16);
+    --radius-lg:16px;
+    --radius-md:12px;
+    --radius-pill:999px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  button, select, .clear-btn, nav.tabs button{touch-action: manipulation;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;}
+  .app{max-width:1140px;margin:0 auto;padding:0 0 60px;}
+  header.top{background:var(--panel);color:var(--ink);padding:20px 24px 0;border-bottom:1px solid var(--border);}
+  header.top .title-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-bottom:16px;}
+  header.top h1{font-size:21px;margin:0;font-weight:900;letter-spacing:-0.01em;}
+  .header-season{font-size:12px;color:var(--muted-ink);font-weight:600;margin-top:2px;}
+  header.top .week-badge{font-size:13px;font-weight:800;color:var(--bg);background:linear-gradient(135deg, var(--teal-bright), var(--teal));padding:6px 14px;border-radius:var(--radius-pill);}
+  nav.tabs{display:flex;gap:6px;border-top:1px solid var(--border-soft);padding:8px 0;}
+  nav.tabs button{background:transparent;border:none;color:var(--muted-ink);font-family:'Inter',sans-serif;font-weight:800;font-size:14px;padding:13px 16px;cursor:pointer;border-radius:var(--radius-pill);}
+  nav.tabs button.active{color:var(--bg);background:linear-gradient(135deg, var(--teal-bright), var(--teal));}
+  main{padding:24px 24px 0;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;margin-bottom:20px;box-shadow:0 4px 14px rgba(0,0,0,0.18);}
+  .card h3{margin:0 0 4px;font-size:16px;font-weight:900;color:var(--ink);}
+  .summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  .summary-tile{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;border-top:4px solid var(--teal);box-shadow:0 4px 14px rgba(0,0,0,0.18);}
+  .summary-tile .num{font-size:22px;font-weight:700;color:var(--ink);line-height:1;}
+  .pick-chip{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:5px 0;}
+  .pick-main{flex:1;min-width:0;}
+  .pick-name-line{display:flex;align-items:center;gap:5px;}
+  .pick-name-line .pname{font-weight:600;}
+  .matchup-sub{font-size:11px;color:var(--muted-ink);margin-top:1px;}
+  .status-badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:var(--radius-pill);white-space:nowrap;flex-shrink:0;}
+  .status-badge.status-td{background:rgba(52,199,89,0.16);color:#4ADE80;}
+  .status-badge.status-notd{background:var(--red-soft);color:var(--red-flag);}
+  .summary-tile .name-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .avatar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--teal-soft);color:var(--teal);font-weight:800;font-size:11px;flex-shrink:0;}
+  .summary-tile .name{font-size:13px;font-weight:800;color:var(--muted-ink);}
+  .summary-tile.eliminated{border-top-color:var(--red-flag);opacity:0.75;}
+  .summary-tile.eliminated .avatar{background:var(--red-soft);color:var(--red-flag);}
+  .elim-badge{font-size:10px;font-weight:800;color:var(--red-flag);background:var(--red-soft);padding:3px 9px;border-radius:var(--radius-pill);letter-spacing:0.02em;}
+  table.matrix{width:100%;min-width:680px;border-collapse:collapse;font-size:13px;}
+  table.matrix th, table.matrix td{border:1px solid var(--border-soft);padding:9px;vertical-align:top;min-width:150px;}
+  table.matrix th{background:var(--panel-raised);color:var(--ink);font-weight:800;text-align:left;font-size:12px;}
+  table.matrix td.wk-col{background:var(--panel-raised);font-weight:800;text-align:center;width:64px;min-width:64px;color:var(--muted-ink);font-size:12px;}
+  .pending-row td{color:var(--muted-ink);font-style:italic;}
+  .lock-icon{opacity:0.65;font-size:12px;}
+  select, textarea, input[type=text], input[type=number]{font-family:'Inter',sans-serif;font-size:16px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--panel-raised);color:var(--ink);width:100%;}
+  select:disabled{background:var(--panel);color:var(--muted-ink);}
+  select option{background:var(--panel-raised);color:var(--ink);}
+  label{font-size:12px;font-weight:800;color:var(--muted-ink);display:block;margin-bottom:5px;}
+  .pick-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media(max-width:800px){.pick-slots{grid-template-columns:1fr;} .summary-row{grid-template-columns:repeat(2,1fr);}}
+  .slot{border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;position:relative;background:var(--panel-raised);}
+  .slot.locked{background:#151F29;}
+  .slot .clear-btn{position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;color:var(--muted-ink);font-size:12px;font-weight:800;padding:8px 10px;min-height:36px;}
+  .slot .clear-btn:hover{color:var(--ink);}
+  .slot .field{margin-bottom:10px;}
+  .locked-note{font-size:11px;color:var(--red-flag);margin-top:6px;font-weight:800;}
+  button.primary{background:linear-gradient(135deg, var(--teal-bright), var(--teal));color:var(--bg);border:none;border-radius:var(--radius-pill);font-weight:900;padding:12px 24px;cursor:pointer;font-size:14px;}
+  button.primary:hover{background:var(--teal-dark);}
+  button.secondary{background:var(--panel-raised);color:var(--ink);border:1px solid var(--border);border-radius:var(--radius-pill);font-weight:800;padding:10px 18px;cursor:pointer;font-size:13px;margin-right:10px;}
+  button.secondary:hover{background:var(--panel);}
+  .status-msg{font-size:13px;margin-top:10px;padding:10px 14px;border-radius:var(--radius-md);font-weight:700;}
+  .status-ok{background:var(--teal-soft);color:var(--teal);}
+  .status-err{background:var(--red-soft);color:var(--red-flag);}
+  .muted{color:var(--muted-ink);font-size:13px;}
+  .last-updated{font-size:12px;color:var(--muted-ink);margin-top:14px;}
+  .refresh-actions{display:flex;flex-wrap:wrap;align-items:center;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="title-row">
+      <div>
+        <h1>TD Pick 'Em League</h1>
+        <div class="header-season">2026 Season</div>
+      </div>
+      <div class="week-badge" id="weekBadge">WEEK —</div>
+    </div>
+    <nav class="tabs">
+      <button data-tab="dashboard" class="active">Dashboard</button>
+      <button data-tab="picks">Picks</button>
+      <button data-tab="refresh">Data Refresh</button>
+      <button data-tab="admin">Admin</button>
+    </nav>
+  </header>
+  <main>
+    <div id="connNote"></div>
+    <div id="tab-dashboard" class="tabpane"></div>
+    <div id="tab-picks" class="tabpane" style="display:none;"></div>
+    <div id="tab-refresh" class="tabpane" style="display:none;"></div>
+    <div id="tab-admin" class="tabpane" style="display:none;"></div>
+  </main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ===========================================================================
+// SETUP — paste your Firebase project's web config here.
+// Firebase Console > Project settings > Your apps > Web app > SDK setup.
+// These values are not secrets; they identify the project. Access is
+// controlled by the Firestore security rules, not by hiding this config.
+// ===========================================================================
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBUpaLICF2StHyVlfYS--KxEcZ8y_afdmk",
+  authDomain: "anytime-td-pick-em-league.firebaseapp.com",
+  projectId: "anytime-td-pick-em-league",
+  storageBucket: "anytime-td-pick-em-league.firebasestorage.app",
+  messagingSenderId: "326545216995",
+  appId: "1:326545216995:web:b789b982d06b846a023cd6"
+};
+const PLAYERS = ["David Felden","Riley Gallagher","Michael Krug","Kevin McMahon"];
+const TEAM_NAMES = {
+  ARI:"Cardinals", ATL:"Falcons", BAL:"Ravens", BUF:"Bills", CAR:"Panthers", CHI:"Bears",
+  CIN:"Bengals", CLE:"Browns", DAL:"Cowboys", DEN:"Broncos", DET:"Lions", GB:"Packers",
+  HOU:"Texans", IND:"Colts", JAX:"Jaguars", KC:"Chiefs", LAC:"Chargers", LAR:"Rams",
+  LV:"Raiders", MIA:"Dolphins", MIN:"Vikings", NE:"Patriots", NO:"Saints", NYG:"Giants",
+  NYJ:"Jets", PHI:"Eagles", PIT:"Steelers", SEA:"Seahawks", SF:"49ers", TB:"Buccaneers",
+  TEN:"Titans", WAS:"Commanders"
+};
+function teamName(code){ return TEAM_NAMES[code] || code; }
+const LEAGUE_YEAR = 2026;
+function formatGameTime(iso){
+  if(!iso) return "";
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return "";
+  return d.toLocaleString(undefined, {weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit"});
+}
+const TOTAL_WEEKS = 22;
+function weekLabel(w){
+  if(w<=18) return "Wk "+w;
+  return ["Wild Card","Divisional","Conf Champ","Super Bowl"][w-19];
+}
+
+let state = null;
+let selectedPerson = PLAYERS[0];
+let adminUnlocked = false;
+const ADMIN_PASSWORD = "SteakDinner";
+
+function defaultState(){
+  return {"players":["David Felden","Riley Gallagher","Michael Krug","Kevin McMahon"],"currentWeek":2,"lastUpdated":"2026-09-16T03:44:53.142Z","weeks":{"1":{"games":[{"id":"ATL@PIT","away":"ATL","home":"PIT","kickoff":"2026-09-13T17:00:00Z","final":true},{"id":"CHI@CAR","away":"CHI","home":"CAR","kickoff":"2026-09-13T17:00:00Z","final":true},{"id":"GB@MIN","away":"GB","home":"MIN","kickoff":"2026-09-13T20:25:00Z","final":true},{"id":"BUF@HOU","away":"BUF","home":"HOU","kickoff":"2026-09-13T17:00:00Z","final":true},{"id":"WAS@PHI","away":"WAS","home":"PHI","kickoff":"2026-09-13T20:25:00Z","final":true},{"id":"MIA@LV","away":"MIA","home":"LV","kickoff":"2026-09-13T20:25:00Z","final":true},{"id":"DAL@NYG","away":"DAL","home":"NYG","kickoff":"2026-09-14T00:20:00Z","final":true},{"id":"CLE@JAX","away":"CLE","home":"JAX","kickoff":"2026-09-13T17:00:00Z","final":true},{"id":"BAL@IND","away":"BAL","home":"IND","kickoff":"2026-09-13T17:00:00Z","final":true}],"rosters":{},"boxscore":{"Bijan Robinson":{"nonPassTD":1,"passTD":0},"Kyle Monangai":{"nonPassTD":1,"passTD":0},"Josh Allen":{"nonPassTD":1,"passTD":0},"Justin Jefferson":{"nonPassTD":2,"passTD":0},"D'Andre Swift":{"nonPassTD":3,"passTD":0},"Ashton Jeanty":{"nonPassTD":2,"passTD":0},"Derrick Henry":{"nonPassTD":3,"passTD":0},"CeeDee Lamb":{"nonPassTD":1,"passTD":0},"DJ Moore":{"nonPassTD":1,"passTD":0}},"picks":{"David Felden":[{"gameId":"ATL@PIT","player":"Bijan Robinson"},{"gameId":"CHI@CAR","player":"Kyle Monangai"},{"gameId":"BUF@HOU","player":"Josh Allen"}],"Riley Gallagher":[{"gameId":"GB@MIN","player":"Justin Jefferson"},{"gameId":"CHI@CAR","player":"D'Andre Swift"},{"gameId":"MIA@LV","player":"Ashton Jeanty"}],"Michael Krug":[{"gameId":"BAL@IND","player":"Derrick Henry"},{"gameId":"WAS@PHI","player":"Jalen Hurts"},{"gameId":"CHI@CAR","player":"Colston Loveland"}],"Kevin McMahon":[{"gameId":"DAL@NYG","player":"CeeDee Lamb"},{"gameId":"CLE@JAX","player":"Bhayshul Tuten"},{"gameId":"BUF@HOU","player":"DJ Moore"}]}},"2":{"games":[{"id":"DET@BUF","away":"DET","home":"BUF","kickoff":"2026-09-18T00:15:00Z","final":false},{"id":"CAR@ATL","away":"CAR","home":"ATL","kickoff":"2026-09-20T17:00:00Z","final":false},{"id":"NO@BAL","away":"NO","home":"BAL","kickoff":"2026-09-20T17:00:00Z","final":false},{"id":"MIN@CHI","away":"MIN","home":"CHI","kickoff":"2026-09-20T17:00:00Z","final":false},{"id":"CIN@HOU","away":"CIN","home":"HOU","kickoff":"2026-09-20T17:00:00Z","final":false},{"id":"PIT@NE","away":"PIT","home":"NE","kickoff":"2026-09-20T17:00:00Z","final":false},{"id":"GB@NYJ","away":"GB","home":"NYJ","kickoff":"2026-09-20T17:00:00Z","final":false},{"id":"CLE@TB","away":"CLE","home":"TB","kickoff":"2026-09-20T17:00:00Z","final":false},{"id":"PHI@TEN","away":"PHI","home":"TEN","kickoff":"2026-09-20T17:00:00Z","final":false},{"id":"JAX@DEN","away":"JAX","home":"DEN","kickoff":"2026-09-20T20:05:00Z","final":false},{"id":"LV@LAC","away":"LV","home":"LAC","kickoff":"2026-09-20T20:05:00Z","final":false},{"id":"SEA@ARI","away":"SEA","home":"ARI","kickoff":"2026-09-20T20:25:00Z","final":false},{"id":"WAS@DAL","away":"WAS","home":"DAL","kickoff":"2026-09-20T20:25:00Z","final":false},{"id":"MIA@SF","away":"MIA","home":"SF","kickoff":"2026-09-20T20:25:00Z","final":false},{"id":"IND@KC","away":"IND","home":"KC","kickoff":"2026-09-21T00:20:00Z","final":false},{"id":"NYG@LAR","away":"NYG","home":"LAR","kickoff":"2026-09-22T00:15:00Z","final":false}],"rosters":{"SF":[{"name":"Mac Jones","position":"QB","injury":""},{"name":"Brock Purdy","position":"QB","injury":"O"},{"name":"Christian McCaffrey","position":"RB","injury":""},{"name":"Mike Evans","position":"WR","injury":""},{"name":"Deebo Samuel","position":"WR","injury":""},{"name":"Demarcus Robinson","position":"WR","injury":""},{"name":"George Kittle","position":"TE","injury":"IR"},{"name":"De'Zhaun Stribling","position":"WR","injury":""},{"name":"Isaac Guerendo","position":"RB","injury":""},{"name":"Ricky Pearsall","position":"WR","injury":"IR"}],"MIA":[{"name":"Malik Willis","position":"QB","injury":""},{"name":"De'Von Achane","position":"RB","injury":""},{"name":"Jaylen Wright","position":"RB","injury":"D"},{"name":"Ollie Gordon II","position":"RB","injury":""},{"name":"Jalen Tolbert","position":"WR","injury":""},{"name":"Malik Washington","position":"WR","injury":""},{"name":"Caleb Douglas","position":"WR","injury":""},{"name":"Greg Dulcich","position":"TE","injury":""},{"name":"Julian Hill","position":"TE","injury":""}],"LV":[{"name":"Kirk Cousins","position":"QB","injury":""},{"name":"Ashton Jeanty","position":"RB","injury":""},{"name":"Raheem Mostert","position":"RB","injury":""},{"name":"Brock Bowers","position":"TE","injury":"Q"},{"name":"Tre Tucker","position":"WR","injury":""},{"name":"Dont'e Thornton Jr.","position":"WR","injury":""},{"name":"Jack Bech","position":"WR","injury":""},{"name":"Michael Mayer","position":"TE","injury":""}],"GB":[{"name":"Jordan Love","position":"QB","injury":""},{"name":"MarShawn Lloyd","position":"RB","injury":""},{"name":"Josh Jacobs","position":"RB","injury":"Suspended"},{"name":"Jayden Reed","position":"WR","injury":"IR"},{"name":"Matthew Golden","position":"WR","injury":""},{"name":"Tucker Kraft","position":"TE","injury":""},{"name":"Jonnu Smith","position":"TE","injury":""},{"name":"Christian Watson","position":"WR","injury":"PUP"},{"name":"Kaleb Johnson","position":"RB","injury":""}],"KC":[{"name":"Patrick Mahomes","position":"QB","injury":""},{"name":"Kenneth Walker III","position":"RB","injury":""},{"name":"Emmett Johnson","position":"RB","injury":""},{"name":"Rashee Rice","position":"WR","injury":""},{"name":"Xavier Worthy","position":"WR","injury":"D"},{"name":"Travis Kelce","position":"TE","injury":""},{"name":"Tyquan Thornton","position":"WR","injury":""},{"name":"Noah Gray","position":"TE","injury":""}],"BAL":[{"name":"Lamar Jackson","position":"QB","injury":""},{"name":"Derrick Henry","position":"RB","injury":""},{"name":"Justice Hill","position":"RB","injury":""},{"name":"Zay Flowers","position":"WR","injury":"Q"},{"name":"Rashod Bateman","position":"WR","injury":""},{"name":"Mark Andrews","position":"TE","injury":""},{"name":"DeAndre Hopkins","position":"WR","injury":""},{"name":"Devontez Walker","position":"WR","injury":""}],"MIN":[{"name":"Carson Wentz","position":"QB","injury":""},{"name":"Kyler Murray","position":"QB","injury":"Q"},{"name":"Aaron Jones","position":"RB","injury":""},{"name":"Jordan Mason","position":"RB","injury":""},{"name":"Justin Jefferson","position":"WR","injury":""},{"name":"Jordan Addison","position":"WR","injury":""},{"name":"T.J. Hockenson","position":"TE","injury":""},{"name":"Jalen Nailor","position":"WR","injury":""},{"name":"Josh Oliver","position":"TE","injury":""}],"BUF":[{"name":"Josh Allen","position":"QB","injury":""},{"name":"James Cook III","position":"RB","injury":""},{"name":"Ray Davis","position":"RB","injury":""},{"name":"Khalil Shakir","position":"WR","injury":""},{"name":"DJ Moore","position":"WR","injury":""},{"name":"Keon Coleman","position":"WR","injury":""},{"name":"Dalton Kincaid","position":"TE","injury":""},{"name":"Joshua Palmer","position":"WR","injury":""},{"name":"Dawson Knox","position":"TE","injury":""}],"NE":[{"name":"Drake Maye","position":"QB","injury":""},{"name":"Rhamondre Stevenson","position":"RB","injury":""},{"name":"TreVeyon Henderson","position":"RB","injury":""},{"name":"A.J. Brown","position":"WR","injury":""},{"name":"Romeo Doubs","position":"WR","injury":""},{"name":"DeMario Douglas","position":"WR","injury":""},{"name":"Hunter Henry","position":"TE","injury":""},{"name":"Kyle Williams","position":"WR","injury":""},{"name":"Mack Hollins","position":"WR","injury":""}],"NYJ":[{"name":"Geno Smith","position":"QB","injury":""},{"name":"Breece Hall","position":"RB","injury":""},{"name":"Braelon Allen","position":"RB","injury":""},{"name":"Garrett Wilson","position":"WR","injury":""},{"name":"Adonai Mitchell","position":"WR","injury":""},{"name":"Mason Taylor","position":"TE","injury":""},{"name":"Kenyon Sadiq","position":"TE","injury":""},{"name":"Isaiah Williams","position":"WR","injury":""},{"name":"Jeremy Ruckert","position":"TE","injury":""}],"CIN":[{"name":"Joe Burrow","position":"QB","injury":""},{"name":"Chase Brown","position":"RB","injury":""},{"name":"Ja'Marr Chase","position":"WR","injury":""},{"name":"Tee Higgins","position":"WR","injury":""},{"name":"Andrei Iosivas","position":"WR","injury":""},{"name":"Mike Gesicki","position":"TE","injury":""},{"name":"Samaje Perine","position":"RB","injury":""},{"name":"Drew Sample","position":"TE","injury":""}],"CLE":[{"name":"Deshaun Watson","position":"QB","injury":""},{"name":"Quinshon Judkins","position":"RB","injury":""},{"name":"Dylan Sampson","position":"RB","injury":""},{"name":"Jerry Jeudy","position":"WR","injury":""},{"name":"Cedric Tillman","position":"WR","injury":""},{"name":"Harold Fannin Jr.","position":"TE","injury":""},{"name":"KC Concepcion","position":"WR","injury":""},{"name":"Denzel Boston","position":"WR","injury":""},{"name":"Shedeur Sanders","position":"QB","injury":""}],"PIT":[{"name":"Aaron Rodgers","position":"QB","injury":""},{"name":"Jaylen Warren","position":"RB","injury":""},{"name":"Rico Dowdle","position":"RB","injury":""},{"name":"DK Metcalf","position":"WR","injury":""},{"name":"Michael Pittman Jr.","position":"WR","injury":""},{"name":"Pat Freiermuth","position":"TE","injury":""},{"name":"Roman Wilson","position":"WR","injury":""},{"name":"Calvin Austin III","position":"WR","injury":""},{"name":"Darnell Washington","position":"TE","injury":""}],"HOU":[{"name":"C.J. Stroud","position":"QB","injury":""},{"name":"David Montgomery","position":"RB","injury":""},{"name":"Woody Marks","position":"RB","injury":""},{"name":"Nico Collins","position":"WR","injury":""},{"name":"Kayshon Boutte","position":"WR","injury":""},{"name":"Jaylin Noel","position":"WR","injury":""},{"name":"Dalton Schultz","position":"TE","injury":""},{"name":"Xavier Hutchinson","position":"WR","injury":""},{"name":"Tank Dell","position":"WR","injury":"IR"}],"IND":[{"name":"Daniel Jones","position":"QB","injury":""},{"name":"Jonathan Taylor","position":"RB","injury":""},{"name":"DJ Giddens","position":"RB","injury":""},{"name":"Josh Downs","position":"WR","injury":"Q"},{"name":"Alec Pierce","position":"WR","injury":""},{"name":"Keenan Allen","position":"WR","injury":""},{"name":"Tyler Warren","position":"TE","injury":"Q"},{"name":"Mo Alie-Cox","position":"TE","injury":""}],"JAX":[{"name":"Trevor Lawrence","position":"QB","injury":""},{"name":"Bhayshul Tuten","position":"RB","injury":"Q"},{"name":"Chris Rodriguez Jr.","position":"RB","injury":""},{"name":"Brian Thomas Jr.","position":"WR","injury":""},{"name":"Travis Hunter","position":"WR","injury":""},{"name":"Parker Washington","position":"WR","injury":""},{"name":"Jakobi Meyers","position":"WR","injury":""},{"name":"Josh Cameron","position":"WR","injury":""},{"name":"Brenton Strange","position":"TE","injury":""},{"name":"Dyami Brown","position":"WR","injury":""}],"TEN":[{"name":"Cam Ward","position":"QB","injury":""},{"name":"Tony Pollard","position":"RB","injury":""},{"name":"Tyjae Spears","position":"RB","injury":""},{"name":"Calvin Ridley","position":"WR","injury":""},{"name":"Wan'Dale Robinson","position":"WR","injury":""},{"name":"Elic Ayomanor","position":"WR","injury":""},{"name":"Gunnar Helm","position":"TE","injury":""},{"name":"Chimere Dike","position":"WR","injury":""},{"name":"Daniel Bellinger","position":"TE","injury":""}],"DEN":[{"name":"Bo Nix","position":"QB","injury":""},{"name":"J.K. Dobbins","position":"RB","injury":"Q"},{"name":"RJ Harvey","position":"RB","injury":""},{"name":"Courtland Sutton","position":"WR","injury":""},{"name":"Jaylen Waddle","position":"WR","injury":""},{"name":"Marvin Mims Jr.","position":"WR","injury":""},{"name":"Troy Franklin","position":"WR","injury":""},{"name":"Evan Engram","position":"TE","injury":""},{"name":"Adam Trautman","position":"TE","injury":""}],"LAC":[{"name":"Justin Herbert","position":"QB","injury":""},{"name":"Omarion Hampton","position":"RB","injury":""},{"name":"Kimani Vidal","position":"RB","injury":""},{"name":"Ladd McConkey","position":"WR","injury":"Q"},{"name":"Quentin Johnston","position":"WR","injury":""},{"name":"Tre Harris","position":"WR","injury":""},{"name":"David Njoku","position":"TE","injury":""},{"name":"Oronde Gadsden II","position":"TE","injury":""}],"DAL":[{"name":"Dak Prescott","position":"QB","injury":""},{"name":"Javonte Williams","position":"RB","injury":""},{"name":"CeeDee Lamb","position":"WR","injury":""},{"name":"George Pickens","position":"WR","injury":""},{"name":"Jake Ferguson","position":"TE","injury":""},{"name":"KaVontae Turpin","position":"WR","injury":""},{"name":"Ryan Flournoy","position":"WR","injury":""},{"name":"Malik Davis","position":"RB","injury":""},{"name":"Luke Schoonmaker","position":"TE","injury":""}],"NYG":[{"name":"Jaxson Dart","position":"QB","injury":""},{"name":"Cam Skattebo","position":"RB","injury":""},{"name":"Tyrone Tracy Jr.","position":"RB","injury":""},{"name":"Devin Singletary","position":"RB","injury":""},{"name":"Isaiah Likely","position":"TE","injury":""},{"name":"Malik Nabers","position":"WR","injury":"Q"},{"name":"Darius Slayton","position":"WR","injury":""},{"name":"Jalin Hyatt","position":"WR","injury":""},{"name":"Theo Johnson","position":"TE","injury":""}],"PHI":[{"name":"Jalen Hurts","position":"QB","injury":""},{"name":"Saquon Barkley","position":"RB","injury":""},{"name":"DeVonta Smith","position":"WR","injury":""},{"name":"Marquise Brown","position":"WR","injury":""},{"name":"Dallas Goedert","position":"TE","injury":""},{"name":"Dontayvion Wicks","position":"WR","injury":""},{"name":"Makai Lemon","position":"WR","injury":""},{"name":"Tank Bigsby","position":"RB","injury":""},{"name":"Elijah Moore","position":"WR","injury":""}],"WAS":[{"name":"Jayden Daniels","position":"QB","injury":""},{"name":"Jacory Croskey-Merritt","position":"RB","injury":""},{"name":"Rachaad White","position":"RB","injury":""},{"name":"Terry McLaurin","position":"WR","injury":""},{"name":"Stefon Diggs","position":"WR","injury":""},{"name":"Antonio Williams","position":"WR","injury":""},{"name":"Luke McCaffrey","position":"WR","injury":""},{"name":"Chig Okonkwo","position":"TE","injury":""},{"name":"Zach Ertz","position":"TE","injury":""}],"CHI":[{"name":"Caleb Williams","position":"QB","injury":""},{"name":"D'Andre Swift","position":"RB","injury":""},{"name":"Kyle Monangai","position":"RB","injury":""},{"name":"Rome Odunze","position":"WR","injury":""},{"name":"Luther Burden III","position":"WR","injury":""},{"name":"Kalif Raymond","position":"WR","injury":""},{"name":"Colston Loveland","position":"TE","injury":""},{"name":"Cole Kmet","position":"TE","injury":""},{"name":"Roschon Johnson","position":"RB","injury":""}],"DET":[{"name":"Jared Goff","position":"QB","injury":""},{"name":"Jahmyr Gibbs","position":"RB","injury":""},{"name":"Sione Vaki","position":"RB","injury":""},{"name":"Amon-Ra St. Brown","position":"WR","injury":""},{"name":"Jameson Williams","position":"WR","injury":""},{"name":"Sam LaPorta","position":"TE","injury":""},{"name":"Isaac TeSlaa","position":"WR","injury":""},{"name":"Brock Wright","position":"TE","injury":""}],"ATL":[{"name":"Michael Penix Jr.","position":"QB","injury":""},{"name":"Bijan Robinson","position":"RB","injury":""},{"name":"Brian Robinson Jr.","position":"RB","injury":""},{"name":"Drake London","position":"WR","injury":""},{"name":"Jahan Dotson","position":"WR","injury":""},{"name":"Kyle Pitts","position":"TE","injury":""},{"name":"Casey Washington","position":"WR","injury":""},{"name":"Tua Tagovailoa","position":"QB","injury":""}],"CAR":[{"name":"Bryce Young","position":"QB","injury":""},{"name":"Chuba Hubbard","position":"RB","injury":""},{"name":"Trevor Etienne","position":"RB","injury":""},{"name":"Tetairoa McMillan","position":"WR","injury":""},{"name":"Xavier Legette","position":"WR","injury":""},{"name":"Jalen Coker","position":"WR","injury":""},{"name":"John Metchie III","position":"WR","injury":""},{"name":"Tommy Tremble","position":"TE","injury":""},{"name":"Darren Waller","position":"TE","injury":""}],"NO":[{"name":"Tyler Shough","position":"QB","injury":""},{"name":"Alvin Kamara","position":"RB","injury":""},{"name":"Travis Etienne Jr.","position":"RB","injury":""},{"name":"Kendre Miller","position":"RB","injury":""},{"name":"Chris Olave","position":"WR","injury":""},{"name":"Devaughn Vele","position":"WR","injury":""},{"name":"Bryce Lance","position":"WR","injury":""},{"name":"Juwan Johnson","position":"TE","injury":""},{"name":"Noah Fant","position":"TE","injury":""}],"TB":[{"name":"Baker Mayfield","position":"QB","injury":""},{"name":"Bucky Irving","position":"RB","injury":""},{"name":"Sean Tucker","position":"RB","injury":""},{"name":"Emeka Egbuka","position":"WR","injury":""},{"name":"Chris Godwin","position":"WR","injury":""},{"name":"Jalen McMillan","position":"WR","injury":""},{"name":"Cade Otton","position":"TE","injury":""},{"name":"Kenneth Gainwell","position":"RB","injury":""},{"name":"Payne Durham","position":"TE","injury":""}],"ARI":[{"name":"Jacoby Brissett","position":"QB","injury":""},{"name":"Tyler Allgeier","position":"RB","injury":""},{"name":"Jeremiyah Love","position":"RB","injury":""},{"name":"Marvin Harrison Jr.","position":"WR","injury":""},{"name":"Michael Wilson","position":"WR","injury":""},{"name":"Trey McBride","position":"TE","injury":""},{"name":"Kendrick Bourne","position":"WR","injury":""},{"name":"James Conner","position":"RB","injury":"IR"},{"name":"Trey Benson","position":"RB","injury":"IR"}],"LAR":[{"name":"Matthew Stafford","position":"QB","injury":""},{"name":"Kyren Williams","position":"RB","injury":""},{"name":"Blake Corum","position":"RB","injury":""},{"name":"Puka Nacua","position":"WR","injury":""},{"name":"Davante Adams","position":"WR","injury":""},{"name":"Tutu Atwell","position":"WR","injury":""},{"name":"Tyler Higbee","position":"TE","injury":""},{"name":"Jordan Whittington","position":"WR","injury":""},{"name":"Colby Parkinson","position":"TE","injury":""}],"SEA":[{"name":"Sam Darnold","position":"QB","injury":""},{"name":"Jadarian Price","position":"RB","injury":""},{"name":"Zach Charbonnet","position":"RB","injury":"PUP"},{"name":"Jaxon Smith-Njigba","position":"WR","injury":""},{"name":"Cooper Kupp","position":"WR","injury":""},{"name":"Rashid Shaheed","position":"WR","injury":""},{"name":"AJ Barner","position":"TE","injury":""},{"name":"Elijah Arroyo","position":"TE","injury":""}]},"boxscore":{},"picks":{"David Felden":[null,null,null],"Riley Gallagher":[null,null,null],"Michael Krug":[null,null,null],"Kevin McMahon":[{"gameId":"MIN@CHI","player":null},null,null]}}}};
+}
+
+function ensureWeek(w){
+  const key = String(w);
+  if(!state.weeks[key]){
+    state.weeks[key] = { games: [], rosters: {}, boxscore: {}, picks: {} };
+  }
+  PLAYERS.forEach(p=>{
+    if(!state.weeks[key].picks[p]) state.weeks[key].picks[p] = [null,null,null];
+  });
+  return state.weeks[key];
+}
+
+// ---------------------------------------------------------------------------
+// Firebase backend
+// ---------------------------------------------------------------------------
+// The entire league state is kept as one JSON string inside a single Firestore
+// document. Storing it as a string rather than a nested object sidesteps
+// Firestore's restriction on nested arrays completely, and the payload is far
+// under the 1 MB per-document limit.
+
+let docRef = null;
+let canWriteShared = null;
+let connectionNote = "";
+
+function firebaseConfigured(){
+  return FIREBASE_CONFIG && typeof FIREBASE_CONFIG.apiKey === "string"
+    && FIREBASE_CONFIG.apiKey.length > 0
+    && !/^PASTE/i.test(FIREBASE_CONFIG.apiKey);
+}
+
+async function initBackend(){
+  if(!firebaseConfigured()){
+    connectionNote = "Not set up yet — paste your Firebase config into FIREBASE_CONFIG near the top of this file. Until then nothing is saved or shared.";
+    return false;
+  }
+  try{
+    const app = initializeApp(FIREBASE_CONFIG);
+    await signInAnonymously(getAuth(app));
+    docRef = doc(getFirestore(app), "pickem", "state");
+    return true;
+  }catch(e){
+    docRef = null;
+    connectionNote = "Couldn't connect to the league database (" + (e && e.message ? e.message : e) + "). Showing a local copy only — nothing will be saved.";
+    return false;
+  }
+}
+
+async function loadState(){
+  const ok = await initBackend();
+  if(!ok){
+    state = defaultState();
+  } else {
+    try{
+      const snap = await getDoc(docRef);
+      if(snap.exists() && snap.data() && typeof snap.data().json === "string"){
+        state = JSON.parse(snap.data().json);
+      } else {
+        // First ever load: seed the shared document so every viewer starts
+        // from the same baseline instead of each holding a private copy.
+        state = defaultState();
+        try{
+          await setDoc(docRef, {json: JSON.stringify(state), updatedAt: Date.now()});
+        }catch(e){
+          console.warn("Could not seed initial state:", e && e.message);
+        }
+      }
+      canWriteShared = true;
+    }catch(e){
+      docRef = null;
+      connectionNote = "Couldn't read the league data (" + (e && e.message ? e.message : e) + "). Showing a local copy only.";
+      state = defaultState();
+    }
+  }
+  if(!("lastUpdated" in state)) state.lastUpdated = null;
+  ensureWeek(state.currentWeek);
+}
+
+let savingInFlight = 0;
+let lastSaveError = null;
+function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+async function saveState(){
+  savingInFlight++;
+  try{
+    if(!docRef){
+      lastSaveError = connectionNote || "Not connected — changes aren't being saved.";
+      return false;
+    }
+    const payload = {json: JSON.stringify(state), updatedAt: Date.now()};
+    const attempt = ()=> setDoc(docRef, payload);
+    try{
+      await attempt();
+      lastSaveError = null;
+      return true;
+    }catch(e){
+      const code = e && e.code ? String(e.code) : "";
+      if(/unavailable|deadline|network/i.test(code)){
+        await sleep(600 + Math.random()*600);
+        try{
+          await attempt();
+          lastSaveError = null;
+          return true;
+        }catch(e2){
+          lastSaveError = (e2 && e2.message ? e2.message : String(e2)) + (e2 && e2.code ? " (" + e2.code + ")" : "");
+          console.error("Save failed after retry:", lastSaveError);
+          return false;
+        }
+      }
+      if(/permission-denied|unauthenticated/i.test(code)){
+        canWriteShared = false;
+        connectionNote = "This browser isn't allowed to save changes — check the Firestore security rules (see the setup notes).";
+        lastSaveError = "Write refused by Firestore rules (" + code + ").";
+        try{ renderConnectionNote(); renderPicks(); }catch(_){}
+        return false;
+      }
+      lastSaveError = (e && e.message ? e.message : String(e)) + (code ? " (" + code + ")" : "");
+      console.error("Save failed:", lastSaveError);
+      return false;
+    }
+  }finally{
+    savingInFlight--;
+  }
+}
+
+function allUsedPlayersFor(person, excludeWeek, excludeSlotIdx){
+  const used = new Set();
+  Object.keys(state.weeks).forEach(wk=>{
+    const picks = state.weeks[wk].picks[person] || [];
+    picks.forEach((p, idx)=>{
+      if(!p) return;
+      if(String(wk) === String(excludeWeek) && idx === excludeSlotIdx) return;
+      used.add(p.player);
+    });
+  });
+  return used;
+}
+
+function nonPassTD(wk, playerName){
+  const box = (wk && wk.boxscore) || {};
+  const rec = box[playerName];
+  if(!rec) return 0;
+  return rec.nonPassTD || 0;
+}
+
+function picksComplete(weekObj, person){
+  const picks = (weekObj && weekObj.picks && weekObj.picks[person]) || [];
+  return picks.length === 3 && picks.every(p => p && p.gameId && p.player);
+}
+
+function weekAllGamesFinal(weekObj){
+  const games = (weekObj && weekObj.games) || [];
+  return games.length > 0 && games.every(g => g.final);
+}
+
+function weekPickResult(weekObj, person){
+  if(!picksComplete(weekObj, person)){
+    if(weekAllGamesFinal(weekObj)){
+      return {scored: 0, submitted: 1, unresolved: 0};
+    }
+    return {scored: 0, submitted: 0, unresolved: 1};
+  }
+  const picks = weekObj.picks[person] || [];
+  let scored = 0, submitted = 0, unresolved = 0;
+  picks.forEach(p=>{
+    if(!p) return;
+    submitted++;
+    if(!gameFinal(weekObj, p.gameId)){ unresolved++; return; }
+    if(nonPassTD(weekObj, p.player) > 0) scored++;
+  });
+  return {scored, submitted, unresolved};
+}
+
+function weekComplete(weekObj){
+  return Object.keys((weekObj && weekObj.boxscore) || {}).length > 0;
+}
+
+function computeEliminations(){
+  const weekNums = Object.keys(state.weeks).map(Number).sort((a,b)=>a-b);
+  let alive = new Set(PLAYERS);
+  const eliminatedWeek = {};
+  PLAYERS.forEach(p=>eliminatedWeek[p]=null);
+
+  weekNums.forEach(w=>{
+    const wk = state.weeks[String(w)];
+    if(!weekComplete(wk) && !weekAllGamesFinal(wk)) return;
+    const stillAliveEntering = new Set(alive);
+    if(stillAliveEntering.size === 0) return;
+    const results = {};
+    let weekFullyResolved = true;
+    stillAliveEntering.forEach(p=>{
+      const r = weekPickResult(wk, p);
+      results[p] = r;
+      if(r.unresolved > 0) weekFullyResolved = false;
+    });
+    if(!weekFullyResolved) return;
+    const failedThisWeek = new Set();
+    stillAliveEntering.forEach(p=>{
+      const {scored, submitted} = results[p];
+      if(submitted > 0 && scored === 0) failedThisWeek.add(p);
+    });
+    if(failedThisWeek.size === stillAliveEntering.size && stillAliveEntering.size > 0){
+      return;
+    }
+    failedThisWeek.forEach(p=>{
+      alive.delete(p);
+      eliminatedWeek[p] = w;
+    });
+  });
+
+  const overrides = state.eliminationOverrides || {};
+  Object.keys(overrides).forEach(p=>{
+    if(overrides[p] === "eliminated" && alive.has(p)){
+      alive.delete(p);
+      eliminatedWeek[p] = state.currentWeek;
+    } else if(overrides[p] === "alive" && !alive.has(p)){
+      alive.add(p);
+      eliminatedWeek[p] = null;
+    }
+  });
+
+  return {eliminatedWeek, alive};
+}
+
+function totalTDsFor(person){
+  let total = 0;
+  Object.values(state.weeks).forEach(wk=>{
+    (wk.picks[person] || []).forEach(p=>{
+      if(!p) return;
+      total += nonPassTD(wk, p.player);
+    });
+  });
+  return total;
+}
+
+function gameLocked(weekObj, gameId){
+  const game = ((weekObj && weekObj.games)||[]).find(g=>g.id===gameId);
+  if(!game || !game.kickoff) return false;
+  const t = new Date(game.kickoff).getTime();
+  return !isNaN(t) && t <= Date.now();
+}
+
+function gameFinal(weekObj, gameId){
+  const game = ((weekObj && weekObj.games)||[]).find(g=>g.id===gameId);
+  return !!(game && game.final);
+}
+
+function personWeekLocked(weekObj, person){
+  const picks = ((weekObj && weekObj.picks) || {})[person] || [];
+  return picks.some(p=> p && nonPassTD(weekObj, p.player) > 0);
+}
+
+function el(tag, attrs={}, children=[]){
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k,v])=>{
+    if(k==="text") e.textContent = v;
+    else if(k==="html") e.innerHTML = v;
+    else if(k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k,v);
+  });
+  (Array.isArray(children)?children:[children]).forEach(c=>{ if(c) e.appendChild(c); });
+  return e;
+}
+
+function renderWeekBadge(){
+  document.getElementById("weekBadge").textContent = "WEEK " + state.currentWeek;
+}
+
+function renderConnectionNote(){
+  const host = document.getElementById("connNote");
+  if(!host) return;
+  host.innerHTML = "";
+  if(!connectionNote) return;
+  host.appendChild(el("div",{class:"status-msg status-err",style:"margin:0 0 18px;",text:connectionNote}));
+}
+
+function pickStatus(wk, pk){
+  if(!gameLocked(wk, pk.gameId)) return null;
+  return nonPassTD(wk, pk.player) > 0 ? "td" : "notd";
+}
+
+function matchupLabel(wk, gameId){
+  const g = (wk.games||[]).find(x=>x.id===gameId);
+  return g ? (g.away+" @ "+g.home) : "";
+}
+
+function renderDashboard(){
+  const root = document.getElementById("tab-dashboard");
+  root.innerHTML = "";
+  const {eliminatedWeek, alive} = computeEliminations();
+
+  const summaryRow = el("div",{class:"summary-row"});
+  PLAYERS.forEach(p=>{
+    const isElim = !alive.has(p);
+    const tile = el("div",{class:"summary-tile"+(isElim?" eliminated":"")});
+    tile.appendChild(el("div",{class:"num",text:totalTDsFor(p)+" TDs"}));
+    const nameRow = el("div",{class:"name-row"});
+    const initial = p.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+    nameRow.appendChild(el("span",{class:"avatar",text:initial}));
+    nameRow.appendChild(el("div",{class:"name",text:p}));
+    if(isElim) nameRow.appendChild(el("span",{class:"elim-badge",text:"ELIMINATED WK "+eliminatedWeek[p]}));
+    tile.appendChild(nameRow);
+    summaryRow.appendChild(tile);
+  });
+  root.appendChild(summaryRow);
+
+  const card = el("div",{class:"card"});
+
+  const table = el("table",{class:"matrix"});
+  const thead = el("tr");
+  thead.appendChild(el("th",{text:"Wk"}));
+  PLAYERS.forEach(p=>{
+    const isElim = !alive.has(p);
+    const th = el("th",{});
+    th.appendChild(document.createTextNode(p));
+    if(isElim) th.appendChild(el("span",{class:"elim-badge",text:"ELIMINATED",style:"margin-left:6px;"}));
+    thead.appendChild(th);
+  });
+  table.appendChild(thead);
+
+  for(let w=1; w<=TOTAL_WEEKS; w++){
+    const wk = state.weeks[String(w)];
+    if(wk){
+      wk.picks = wk.picks || {};
+      wk.games = wk.games || [];
+      wk.boxscore = wk.boxscore || {};
+      wk.rosters = wk.rosters || {};
+    }
+    const tr = el("tr", wk ? {} : {class:"pending-row"});
+    tr.appendChild(el("td",{class:"wk-col",text:weekLabel(w)}));
+    if(!wk){
+      PLAYERS.forEach(()=>{
+        tr.appendChild(el("td",{},[el("span",{class:"muted",text:"—"})]));
+      });
+      table.appendChild(tr);
+      continue;
+    }
+    PLAYERS.forEach(p=>{
+      const wasEliminatedByThisWeek = eliminatedWeek[p] !== null && eliminatedWeek[p] < w;
+      const td = el("td",{});
+      if(wasEliminatedByThisWeek){
+        td.appendChild(el("span",{class:"muted",text:"—"}));
+      } else {
+        const picks = wk.picks[p] || [];
+        const anySubmitted = picks.some(x=>x);
+        const complete = picksComplete(wk, p);
+        if(!anySubmitted){
+          td.appendChild(el("span",{class:"muted",text:"(no picks)"}));
+        } else if(!complete){
+          const filled = picks.filter(x=>x).length;
+          td.appendChild(el("span",{class:"muted",text:"(picks in progress — "+filled+" of 3)"}));
+        }
+        if(complete) picks.forEach(pk=>{
+          if(!pk) return;
+          const locked = gameLocked(wk, pk.gameId) || personWeekLocked(wk, p);
+          const status = pickStatus(wk, pk);
+          const chip = el("div",{class:"pick-chip"});
+          const main = el("div",{class:"pick-main"});
+          const nameLine = el("div",{class:"pick-name-line"});
+          nameLine.appendChild(el("span",{class:"pname",text:pk.player}));
+          if(locked) nameLine.appendChild(el("span",{class:"lock-icon",text:"🔒"}));
+          main.appendChild(nameLine);
+          main.appendChild(el("div",{class:"matchup-sub",text:matchupLabel(wk, pk.gameId)}));
+          chip.appendChild(main);
+          if(status){
+            const tds = nonPassTD(wk, pk.player);
+            const statusLabel = status==="td" ? ("TD x"+tds) : "No TD";
+            chip.appendChild(el("span",{class:"status-badge status-"+status,text:statusLabel}));
+          }
+          td.appendChild(chip);
+        });
+      }
+      tr.appendChild(td);
+    });
+    table.appendChild(tr);
+  }
+  const tableScroll = el("div",{style:"overflow-x:auto; -webkit-overflow-scrolling:touch;"});
+  tableScroll.appendChild(table);
+  card.appendChild(tableScroll);
+  root.appendChild(card);
+}
+
+function renderPicks(){
+  const root = document.getElementById("tab-picks");
+  root.innerHTML = "";
+  if(canWriteShared === false || !docRef){
+    const ro = el("div",{class:"card"});
+    ro.appendChild(el("h3",{text:"Picks — View Only"}));
+    ro.appendChild(el("p",{class:"muted",style:"margin-top:6px;",
+      text: connectionNote || "This view can't save picks. Send your picks to the commissioner to have them entered."}));
+    ro.appendChild(el("p",{class:"muted",style:"margin-top:10px;",
+      text:"The Dashboard tab still shows everyone's picks and results as they update."}));
+    root.appendChild(ro);
+    return;
+  }
+  const card = el("div",{class:"card"});
+  const {alive} = computeEliminations();
+
+  const personWrap = el("div",{style:"max-width:280px;margin-bottom:18px;"});
+  personWrap.appendChild(el("label",{text:"Who's picking?"}));
+  const personSelect = el("select",{});
+  PLAYERS.forEach(p=>personSelect.appendChild(el("option",{value:p,text: alive.has(p) ? p : (p+" (Eliminated)")})));
+  personSelect.value = selectedPerson;
+  personWrap.appendChild(personSelect);
+  card.appendChild(personWrap);
+
+  const slotsWrap = el("div",{class:"pick-slots"});
+  card.appendChild(slotsWrap);
+
+  const progressMsg = el("div",{class:"muted",style:"margin-top:14px;"});
+  card.appendChild(progressMsg);
+  const statusMsg = el("div",{});
+  card.appendChild(statusMsg);
+  root.appendChild(card);
+
+  function updateProgress(){
+    const wk = ensureWeek(state.currentWeek);
+    const person = personSelect.value;
+    if(!alive.has(person)){ progressMsg.textContent = ""; return; }
+    const picks = wk.picks[person] || [];
+    const filled = picks.filter(p=>p && p.gameId && p.player).length;
+    progressMsg.textContent = filled===3
+      ? "✓ All 3 picks locked in for this week."
+      : filled+" of 3 picks selected — all 3 are required for this week to count on the Dashboard.";
+  }
+
+  function renderSlots(){
+    const person = personSelect.value;
+    const wk = ensureWeek(state.currentWeek);
+    const picks = wk.picks[person];
+    const personEliminated = !alive.has(person);
+    if(personEliminated){
+      slotsWrap.innerHTML = "";
+      slotsWrap.appendChild(el("div",{class:"status-msg status-err",text:person+" has been eliminated and can no longer make picks."}));
+      progressMsg.textContent = "";
+      return;
+    }
+
+    if(!picksComplete(wk, person)){
+      let invalidated = false;
+      picks.forEach((p, i)=>{
+        if(p && gameLocked(wk, p.gameId)){ picks[i] = null; invalidated = true; }
+      });
+      if(invalidated) saveState();
+    }
+
+    const complete = picksComplete(wk, person);
+    const weekLocked = complete && personWeekLocked(wk, person);
+    slotsWrap.innerHTML = "";
+    updateProgress();
+
+    function livePicks(){
+      return ensureWeek(state.currentWeek).picks[person];
+    }
+
+    const playerListRefreshers = [];
+    function refreshOtherPlayerLists(excludeIdx){
+      playerListRefreshers.forEach((fn, i)=>{
+        if(i !== excludeIdx && typeof fn === "function") fn();
+      });
+    }
+
+    picks.forEach((pk, idx)=>{
+      const slotLockedByGame = complete && pk && gameLocked(wk, pk.gameId);
+      const slotLocked = weekLocked || slotLockedByGame;
+      const slot = el("div",{class:"slot"+(slotLocked?" locked":"")});
+
+      const clearBtn = el("button",{class:"clear-btn",text:"Clear"});
+      clearBtn.addEventListener("click", ()=>{
+        livePicks()[idx] = null;
+        renderSlots();
+        saveState().then(()=> renderDashboard());
+      });
+      if(slotLocked) clearBtn.setAttribute("disabled","disabled");
+      slot.appendChild(clearBtn);
+
+      const gameField = el("div",{class:"field"});
+      gameField.appendChild(el("label",{text:"Matchup"}));
+      const gameSelect = el("select",{});
+      gameSelect.appendChild(el("option",{value:"",text:"Select matchup..."}));
+      let availableCount = 0;
+      (wk.games||[]).forEach(g=>{
+        const started = gameLocked(wk, g.id);
+        const isCurrentSelection = pk && pk.gameId===g.id;
+        if(started && !isCurrentSelection) return;
+        availableCount++;
+        const opt = el("option",{value:g.id,text:teamName(g.away)+" @ "+teamName(g.home)+" — "+formatGameTime(g.kickoff)});
+        if(isCurrentSelection) opt.setAttribute("selected","selected");
+        gameSelect.appendChild(opt);
+      });
+      if(slotLocked) gameSelect.setAttribute("disabled","disabled");
+      gameField.appendChild(gameSelect);
+      if(!pk && availableCount===0){
+        if((wk.games||[]).length===0){
+          gameField.appendChild(el("div",{class:"locked-note",text:"No schedule loaded for this week yet — run a Data Refresh."}));
+        } else {
+          gameField.appendChild(el("div",{class:"locked-note",text:"All of this week's games have already started."}));
+        }
+      }
+      slot.appendChild(gameField);
+
+      const playerField = el("div",{class:"field"});
+      playerField.appendChild(el("label",{text:"Player"}));
+      const playerSelect = el("select",{});
+      playerField.appendChild(playerSelect);
+      const searchInput = el("input",{type:"text",placeholder:"Search",style:"margin-top:8px;",autocomplete:"off",autocorrect:"off",autocapitalize:"off",spellcheck:"false"});
+      playerField.appendChild(searchInput);
+      slot.appendChild(playerField);
+
+      function injuryTag(inj){
+        if(!inj || !inj.trim()) return "";
+        return " [" + inj.trim().toUpperCase() + "]";
+      }
+
+      function gameTeams(gameId){
+        const g = (wk.games||[]).find(x=>x.id===gameId);
+        return g ? [g.away, g.home] : [];
+      }
+
+      function combinedRoster(gameId){
+        const [away, home] = gameTeams(gameId);
+        const fromTeam = (t)=> ((wk.rosters && wk.rosters[t]) || []).map(r=>({...r, team:t}));
+        return [...fromTeam(away), ...fromTeam(home)];
+      }
+
+      function allRosteredThisWeek(){
+        const list = [];
+        Object.keys(wk.rosters||{}).forEach(team=>{
+          (wk.rosters[team]||[]).forEach(r=> list.push({...r, team}));
+        });
+        return list;
+      }
+
+      function findGameForTeam(team){
+        return (wk.games||[]).find(g=> (g.away===team || g.home===team) && !gameLocked(wk, g.id));
+      }
+
+      function populatePlayers(gameId, filterTerm){
+        playerSelect.innerHTML = "";
+        playerSelect.appendChild(el("option",{value:"",text:"Select player..."}));
+        const term = (filterTerm||"").trim().toLowerCase();
+        let roster;
+        if(gameId){
+          roster = combinedRoster(gameId);
+        } else if(term){
+          roster = allRosteredThisWeek();
+        } else {
+          return;
+        }
+        const used = allUsedPlayersFor(person, state.currentWeek, idx);
+        roster.forEach(r=>{
+          if(used.has(r.name)) return;
+          if(term && !r.name.toLowerCase().includes(term)) return;
+          const label = r.name + injuryTag(r.injury) + " — " + r.team + " " + r.position;
+          const opt = el("option",{value:r.name,text:label});
+          opt.dataset.team = r.team;
+          if(pk && pk.player===r.name) opt.setAttribute("selected","selected");
+          playerSelect.appendChild(opt);
+        });
+      }
+      populatePlayers(pk ? pk.gameId : gameSelect.value, "");
+      playerListRefreshers[idx] = ()=> populatePlayers(gameSelect.value, searchInput.value);
+      searchInput.addEventListener("input", ()=> populatePlayers(gameSelect.value, searchInput.value));
+      if(slotLocked){ playerSelect.setAttribute("disabled","disabled"); searchInput.setAttribute("disabled","disabled"); }
+
+      async function autoSave(excludeIdx){
+        const ok = await saveState();
+        statusMsg.innerHTML = "";
+        if(!ok){
+          statusMsg.appendChild(el("div",{class:"status-msg status-err",
+            text: "Couldn't save: "+(lastSaveError||"unknown error")}));
+        }
+        renderDashboard();
+        refreshOtherPlayerLists(excludeIdx);
+        updateProgress();
+      }
+
+      gameSelect.addEventListener("change", async ()=>{
+        const arr = livePicks();
+        arr[idx] = arr[idx] || {};
+        arr[idx].gameId = gameSelect.value;
+        arr[idx].player = null;
+        populatePlayers(gameSelect.value, "");
+        await autoSave(idx);
+      });
+      playerSelect.addEventListener("change", async ()=>{
+        if(!playerSelect.value) return;
+        const chosenOpt = playerSelect.options[playerSelect.selectedIndex];
+        const team = chosenOpt.dataset.team;
+        const chosenName = playerSelect.value;
+
+        const freshUsed = allUsedPlayersFor(person, state.currentWeek, idx);
+        if(freshUsed.has(chosenName)){
+          statusMsg.innerHTML = "";
+          statusMsg.appendChild(el("div",{class:"status-msg status-err",
+            text: chosenName+" was just used in another pick — choose a different player."}));
+          populatePlayers(gameSelect.value, searchInput.value);
+          return;
+        }
+
+        const game = gameSelect.value ? (wk.games||[]).find(g=>g.id===gameSelect.value) : findGameForTeam(team);
+        const arr = livePicks();
+        if(game){
+          gameSelect.value = game.id;
+          arr[idx] = {gameId: game.id, player: chosenName};
+        } else {
+          arr[idx] = {gameId: gameSelect.value, player: chosenName};
+        }
+        await autoSave(idx);
+      });
+
+      if(weekLocked){
+        slot.appendChild(el("div",{class:"locked-note",text:"Locked — one of your picks already scored."}));
+      } else if(slotLockedByGame){
+        slot.appendChild(el("div",{class:"locked-note",text:"Locked — game has started."}));
+      }
+      slotsWrap.appendChild(slot);
+    });
+  }
+
+  personSelect.addEventListener("change", ()=>{ selectedPerson = personSelect.value; renderSlots(); });
+  renderSlots();
+}
+
+const HIDDEN_PROMPT_RESULTS = `This is a recurring data refresh for a fantasy pick 'em league — SCHEDULE & RESULTS portion. Run this as often as needed on game days (schedule, roster, and injury data don't need to be re-pulled every time — that's a separate, less frequent prompt).
+
+Determine the current NFL week based on today's date and which games have started or finished.
+
+Pull TWO things, fresh each time:
+1. This week's game schedule, kickoff times, and each game's current status (final, in-progress, or not yet started).
+2. Comprehensive touchdown scoring data for the week — every player who has scored, not just the ones getting mentioned in recaps or live blogs.
+
+For the schedule, use ESPN's or NFL.com's scoreboard for the current week.
+
+For touchdown data, use FantasyPros' weekly stat tables — these are structured, comprehensive tables covering every player at each position for the week, and are far more reliable and efficient than piecing results together from news articles or live-blog commentary, which frequently miss players or contradict each other. Fetch all four:
+- https://www.fantasypros.com/nfl/stats/qb.php?range=week&week=<N>
+- https://www.fantasypros.com/nfl/stats/rb.php?range=week&week=<N>
+- https://www.fantasypros.com/nfl/stats/wr.php?range=week&week=<N>
+- https://www.fantasypros.com/nfl/stats/te.php?range=week&week=<N>
+(replace <N> with the current week number)
+
+Each table has a RUSHING TD column and a RECEIVING TD column (QBs also have a PASSING TD column). For every player with at least one TD in any of those columns, sum their rushing + receiving TDs into the non-passing total, and note passing TDs separately for QBs. Use these tables as the authoritative source — don't cross-check or override them against news articles.
+
+Return the data as PLAIN TEXT lines in EXACTLY this format — no JSON, no prose, no markdown code fences, nothing else at all:
+
+WEEK 4
+GAME|AWAYTEAM|HOMETEAM|2026-01-01T18:00:00Z|F
+GAME|AWAYTEAM|HOMETEAM|2026-01-01T18:00:00Z|
+TD|Player Name|1|0
+
+Rules for the data:
+- One "WEEK" line at the top with the current week number.
+- One "GAME" line per game this week. Use standard team abbreviations, e.g. DAL, PHI. The kickoff must be a full ISO 8601 UTC timestamp. The 5th field is "F" if the game is final/completed, or left blank if scheduled or in progress (still keep the trailing pipe either way). Don't mark a game "F" just because kickoff has passed — only when it's actually over.
+- "TD" lines: one per player with at least one touchdown of any kind, sourced from the FantasyPros stat tables described above. The second number is total non-passing touchdowns (rushing + receiving combined). The third number is passing touchdowns (QBs only, informational, never counts toward pick results). Omit the line entirely for anyone with zero touchdowns.
+- Output nothing but WEEK/GAME/TD lines — no headers, no blank-line explanations, no code fences.`;
+
+const HIDDEN_PROMPT_ROSTERS = `This is a recurring data refresh for a fantasy pick 'em league — ROSTERS & INJURIES portion. This does not need to run every game day — once a week (e.g. early in the week, before the next slate of games) is enough, since rosters and injury designations don't change hour to hour the way scores do.
+
+Pull, fresh each time (don't assume anything carried over unchanged from a prior refresh):
+1. Current team rosters for all 32 teams — accounting for any trades, free agent signings, releases, or retirements since the last refresh. Do not rely on memory of a prior season's depth charts, and do not guess based on general familiarity with a player's "usual" team.
+2. Current injury designations for those players.
+
+Use Sleeper's public player API (https://api.sleeper.app/v1/players/nfl) as the primary source — it's a single bulk endpoint covering every NFL player's current team, position, and injury status in one request. Filter it to skill positions (QB/RB/WR/TE) and pick the top 8-10 per team by depth-chart order / relevance for TD likelihood. If Sleeper's data looks stale or disputed for a specific player, spot-check that one player against Ourlads' NFL Depth Charts (ourlads.com/nfldepthcharts) or recent transaction news rather than re-deriving every team from scratch.
+
+Return the data as PLAIN TEXT lines in EXACTLY this format — no JSON, no prose, no markdown code fences, nothing else at all:
+
+ROSTER|TEAM|Player Name|POS|INJURY
+
+Rules for the data:
+- One "ROSTER" line per skill player, for every one of the 32 teams — the 8-10 QB/RB/WR/TE players currently on that team's active roster most likely to score a touchdown, ordered by likelihood.
+- POS is QB, RB, WR, or TE. INJURY is the player's current designation — Q, D, O, IR, PUP, Suspended, or whatever the source currently shows — or left blank if there's no designation (still keep the trailing pipe, e.g. "ROSTER|DAL|CeeDee Lamb|WR|"). Don't default to Q/D/O if the real status is something else — check the actual current tag for each player rather than guessing.
+- Output nothing but ROSTER lines — no headers, no WEEK line, no blank-line explanations, no code fences.`;
+
+function formatTimestamp(iso){
+  if(!iso) return "Never run yet";
+  const d = new Date(iso);
+  return d.toLocaleString(undefined, {dateStyle:"medium", timeStyle:"short"});
+}
+
+function parseRefreshText(text){
+  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length>0);
+  const result = {week:null, games:[], rosters:{}, boxscore:{}};
+  lines.forEach(line=>{
+    if(/^WEEK\s+\d+/i.test(line)){
+      const m = line.match(/\d+/);
+      if(m) result.week = parseInt(m[0],10);
+    } else if(line.startsWith("GAME|")){
+      const parts = line.split("|");
+      const away = (parts[1]||"").trim(), home = (parts[2]||"").trim(), kickoff = (parts[3]||"").trim();
+      const final = (parts[4]||"").trim().toUpperCase() === "F";
+      if(away && home) result.games.push({id: away+"@"+home, away, home, kickoff, final});
+    } else if(line.startsWith("ROSTER|")){
+      const parts = line.split("|");
+      const team = (parts[1]||"").trim(), name = (parts[2]||"").trim(), pos = (parts[3]||"").trim(), injury = (parts[4]||"").trim();
+      if(team && name){
+        if(!result.rosters[team]) result.rosters[team] = [];
+        result.rosters[team].push({name, position: pos, injury});
+      }
+    } else if(line.startsWith("TD|")){
+      const parts = line.split("|");
+      const name = (parts[1]||"").trim();
+      const nonPass = parseInt(parts[2]||"0",10) || 0;
+      const pass = parseInt(parts[3]||"0",10) || 0;
+      if(name) result.boxscore[name] = {nonPassTD: nonPass, passTD: pass};
+    }
+  });
+  return result;
+}
+
+function renderRefresh(){
+  const root = document.getElementById("tab-refresh");
+  root.innerHTML = "";
+  const card = el("div",{class:"card"});
+  card.appendChild(el("h3",{text:"Data Refresh"}));
+  card.appendChild(el("p",{class:"muted",text:"Two prompts: run \"Schedule & Results\" as often as needed on game days; run \"Rosters & Injuries\" about once a week.",style:"margin-top:2px;margin-bottom:14px;"}));
+
+  const actions = el("div",{class:"refresh-actions"});
+  const copyResultsBtn = el("button",{class:"secondary",text:"Copy Schedule & Results Prompt"});
+  const copyRostersBtn = el("button",{class:"secondary",text:"Copy Rosters & Injuries Prompt"});
+  actions.appendChild(copyResultsBtn);
+  actions.appendChild(copyRostersBtn);
+  card.appendChild(actions);
+
+  function wireCopyButton(btn, text, label){
+    btn.addEventListener("click", async ()=>{
+      try{
+        await navigator.clipboard.writeText(text);
+        btn.textContent = "Copied!";
+        setTimeout(()=>btn.textContent=label, 1500);
+      }catch(e){
+        btn.textContent = "Couldn't copy";
+        setTimeout(()=>btn.textContent=label, 1500);
+      }
+    });
+  }
+  wireCopyButton(copyResultsBtn, HIDDEN_PROMPT_RESULTS, "Copy Schedule & Results Prompt");
+  wireCopyButton(copyRostersBtn, HIDDEN_PROMPT_ROSTERS, "Copy Rosters & Injuries Prompt");
+
+  const pasteArea = el("textarea",{rows:"8",placeholder:"Paste the response here (from either prompt)...",style:"margin-top:14px;"});
+  card.appendChild(pasteArea);
+
+  const applyBtn = el("button",{class:"primary",text:"Apply Updates",style:"margin-top:12px;"});
+  card.appendChild(applyBtn);
+
+  const statusWrap = el("div",{});
+  card.appendChild(statusWrap);
+
+  const lastUpdated = el("div",{class:"last-updated",text:"Last updated: "+formatTimestamp(state.lastUpdated)});
+  card.appendChild(lastUpdated);
+
+  applyBtn.addEventListener("click", async ()=>{
+    statusWrap.innerHTML = "";
+    const parsed = parseRefreshText(pasteArea.value);
+    const hasAnyData = parsed.games.length>0 || Object.keys(parsed.rosters).length>0 || Object.keys(parsed.boxscore).length>0;
+    if(!hasAnyData){
+      statusWrap.appendChild(el("div",{class:"status-msg status-err",text:"Didn't find any GAME, ROSTER, or TD lines — check the paste is complete."}));
+      return;
+    }
+    const weekNum = parsed.week || state.currentWeek;
+    const wk = ensureWeek(weekNum);
+
+    const gameMap = {};
+    (wk.games||[]).forEach(g=>{ gameMap[g.id] = g; });
+    parsed.games.forEach(g=>{ gameMap[g.id] = g; });
+    wk.games = Object.values(gameMap);
+
+    wk.rosters = wk.rosters || {};
+    Object.keys(parsed.rosters).forEach(team=>{ wk.rosters[team] = parsed.rosters[team]; });
+
+    let staleKeysRemoved = 0;
+    Object.values(state.weeks).forEach(w=>{
+      if(!w.rosters) return;
+      Object.keys(w.rosters).forEach(key=>{
+        if(!TEAM_NAMES[key]){ delete w.rosters[key]; staleKeysRemoved++; }
+      });
+    });
+
+    wk.boxscore = wk.boxscore || {};
+    Object.keys(parsed.boxscore).forEach(name=>{ wk.boxscore[name] = parsed.boxscore[name]; });
+
+    if(parsed.week) state.currentWeek = parsed.week;
+    state.lastUpdated = new Date().toISOString();
+    const ok = await saveState();
+    const numTeams = Object.keys(wk.rosters).length;
+    const numPlayers = Object.values(wk.rosters).reduce((sum,arr)=>sum+arr.length,0);
+    const numTD = Object.keys(wk.boxscore).length;
+    const summary = `Week ${weekNum}: ${wk.games.length} games total, ${numTeams} teams rostered (${numPlayers} players), ${numTD} scoring lines. (${parsed.games.length} games, ${Object.keys(parsed.rosters).length} teams, and ${Object.keys(parsed.boxscore).length} scoring lines updated by this paste.)`+(staleKeysRemoved>0?` Cleaned up ${staleKeysRemoved} stale legacy roster key(s).`:"");
+    statusWrap.appendChild(el("div",{class:"status-msg "+(ok?"status-ok":"status-err"),
+      text: ok ? summary : "Couldn't save: "+(lastSaveError||"unknown error")+". Try again."}));
+    if(ok && wk.games.length < 8){
+      statusWrap.appendChild(el("div",{class:"status-msg status-err",text:"That's fewer games than a full week on file for Week "+weekNum+" — if this was meant to be a full refresh, the paste may have been cut short."}));
+    }
+    if(ok && numTeams < wk.games.length*2){
+      statusWrap.appendChild(el("div",{class:"status-msg status-err",text:"Fewer rostered teams than expected for "+wk.games.length+" games — some rosters may be missing. Double-check and re-apply if needed."}));
+    }
+    lastUpdated.textContent = "Last updated: "+formatTimestamp(state.lastUpdated);
+    renderWeekBadge();
+  });
+
+  root.appendChild(card);
+}
+
+function renderAdmin(){
+  const root = document.getElementById("tab-admin");
+  root.innerHTML = "";
+
+  if(!adminUnlocked){
+    const card = el("div",{class:"card"});
+    card.appendChild(el("h3",{text:"Admin — Password Required"}));
+    const pwInput = el("input",{type:"password",placeholder:"Enter admin password",style:"margin-top:12px;"});
+    const unlockBtn = el("button",{class:"primary",text:"Unlock",style:"margin-top:12px;"});
+    const errWrap = el("div",{});
+    card.appendChild(pwInput);
+    card.appendChild(unlockBtn);
+    card.appendChild(errWrap);
+    function tryUnlock(){
+      if(pwInput.value === ADMIN_PASSWORD){
+        adminUnlocked = true;
+        renderAdmin();
+      } else {
+        errWrap.innerHTML = "";
+        errWrap.appendChild(el("div",{class:"status-msg status-err",text:"Incorrect password.",style:"margin-top:10px;"}));
+      }
+    }
+    unlockBtn.addEventListener("click", tryUnlock);
+    pwInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") tryUnlock(); });
+    root.appendChild(card);
+    return;
+  }
+
+  const overrideCard = el("div",{class:"card"});
+  overrideCard.appendChild(el("h3",{text:"Override Player Picks"}));
+  overrideCard.appendChild(el("p",{class:"muted",text:"Edit anyone's picks for any week, including locked ones.",style:"margin-top:2px;margin-bottom:14px;"}));
+
+  const weekNums = Object.keys(state.weeks).map(Number).sort((a,b)=>a-b);
+  if(weekNums.length === 0){
+    overrideCard.appendChild(el("p",{class:"muted",text:"No weeks loaded yet — run a Data Refresh first."}));
+  } else {
+    const controlsRow = el("div",{style:"display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;"});
+    const weekWrap = el("div",{style:"min-width:160px;"});
+    weekWrap.appendChild(el("label",{text:"Week"}));
+    const weekSelect = el("select",{});
+    weekNums.forEach(w=>weekSelect.appendChild(el("option",{value:String(w),text:weekLabel(w)})));
+    weekSelect.value = String(state.currentWeek);
+    if(weekSelect.value === "" || !weekNums.includes(state.currentWeek)) weekSelect.selectedIndex = weekNums.length-1;
+    weekWrap.appendChild(weekSelect);
+    controlsRow.appendChild(weekWrap);
+
+    const personWrap2 = el("div",{style:"min-width:220px;"});
+    personWrap2.appendChild(el("label",{text:"Person"}));
+    const personSelect2 = el("select",{});
+    PLAYERS.forEach(p=>personSelect2.appendChild(el("option",{value:p,text:p})));
+    personWrap2.appendChild(personSelect2);
+    controlsRow.appendChild(personWrap2);
+    overrideCard.appendChild(controlsRow);
+
+    const overrideSlotsWrap = el("div",{class:"pick-slots"});
+    overrideCard.appendChild(overrideSlotsWrap);
+
+    const overrideMsg = el("div",{style:"margin-top:10px;"});
+    overrideCard.appendChild(overrideMsg);
+
+    function renderOverrideSlots(){
+      overrideSlotsWrap.innerHTML = "";
+      overrideMsg.innerHTML = "";
+      const w = parseInt(weekSelect.value, 10);
+      const wk = ensureWeek(w);
+      const person = personSelect2.value;
+      const picks = wk.picks[person];
+
+      picks.forEach((pk, idx)=>{
+        const slot = el("div",{class:"slot"});
+
+        const gField = el("div",{class:"field"});
+        gField.appendChild(el("label",{text:"Matchup"}));
+        const gSel = el("select",{});
+        gSel.appendChild(el("option",{value:"",text:"Select matchup..."}));
+        (wk.games||[]).forEach(g=>{
+          const opt = el("option",{value:g.id,text:teamName(g.away)+" @ "+teamName(g.home)});
+          if(pk && pk.gameId===g.id) opt.setAttribute("selected","selected");
+          gSel.appendChild(opt);
+        });
+        gField.appendChild(gSel);
+        slot.appendChild(gField);
+
+        const pField = el("div",{class:"field"});
+        pField.appendChild(el("label",{text:"Player"}));
+        const pSel = el("select",{});
+        pField.appendChild(pSel);
+        slot.appendChild(pField);
+
+        function populate(gameId){
+          pSel.innerHTML = "";
+          pSel.appendChild(el("option",{value:"",text:"Select player..."}));
+          if(!gameId) return;
+          const g = (wk.games||[]).find(x=>x.id===gameId);
+          if(!g) return;
+          const fromTeam = (t)=> ((wk.rosters && wk.rosters[t]) || []).map(r=>({...r, team:t}));
+          const roster = [...fromTeam(g.away), ...fromTeam(g.home)];
+          roster.forEach(r=>{
+            const opt = el("option",{value:r.name,text:r.name+" — "+r.team+" "+r.position});
+            if(pk && pk.player===r.name) opt.setAttribute("selected","selected");
+            pSel.appendChild(opt);
+          });
+        }
+        populate(pk ? pk.gameId : "");
+        gSel.addEventListener("change", ()=>{ pSel.value=""; populate(gSel.value); });
+
+        const clearBtn = el("button",{class:"clear-btn",text:"Clear"});
+        clearBtn.addEventListener("click", ()=>{
+          gSel.value = ""; pSel.innerHTML = ""; pSel.appendChild(el("option",{value:"",text:"Select player..."}));
+        });
+        slot.appendChild(clearBtn);
+
+        slot._gSel = gSel; slot._pSel = pSel;
+        overrideSlotsWrap.appendChild(slot);
+      });
+    }
+    renderOverrideSlots();
+    weekSelect.addEventListener("change", renderOverrideSlots);
+    personSelect2.addEventListener("change", renderOverrideSlots);
+
+    const saveOverrideBtn = el("button",{class:"primary",text:"Save Override",style:"margin-top:14px;"});
+    saveOverrideBtn.addEventListener("click", async ()=>{
+      const w = parseInt(weekSelect.value, 10);
+      const wk = ensureWeek(w);
+      const person = personSelect2.value;
+      const picks = wk.picks[person];
+      Array.from(overrideSlotsWrap.children).forEach((slotEl, idx)=>{
+        const gId = slotEl._gSel.value, pName = slotEl._pSel.value;
+        picks[idx] = (gId && pName) ? {gameId: gId, player: pName} : null;
+      });
+      const ok = await saveState();
+      overrideMsg.innerHTML = "";
+      overrideMsg.appendChild(el("div",{class:"status-msg "+(ok?"status-ok":"status-err"),
+        text: ok ? "Override saved." : "Couldn't save: "+(lastSaveError||"unknown error")}));
+      renderDashboard();
+    });
+    overrideCard.appendChild(saveOverrideBtn);
+  }
+  root.appendChild(overrideCard);
+
+  const elimCard = el("div",{class:"card"});
+  elimCard.appendChild(el("h3",{text:"Override Elimination Status"}));
+  elimCard.appendChild(el("p",{class:"muted",text:"A player's previously used picks stay locked out for them even if force un-eliminated.",style:"margin-top:2px;margin-bottom:14px;"}));
+  state.eliminationOverrides = state.eliminationOverrides || {};
+  const {eliminatedWeek, alive} = computeEliminations();
+  PLAYERS.forEach(p=>{
+    const isElim = !alive.has(p);
+    const row = el("div",{style:"display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:12px 0;border-bottom:1px solid var(--border-soft);"});
+    const infoWrap = el("div",{});
+    infoWrap.appendChild(el("span",{style:"font-weight:700;margin-right:10px;",text:p}));
+    infoWrap.appendChild(el("span",{class: isElim?"elim-badge":"status-badge status-td",
+      text: isElim ? ("ELIMINATED WK "+eliminatedWeek[p]) : "ALIVE"}));
+    row.appendChild(infoWrap);
+    const toggleBtn = el("button",{class:"secondary",text: isElim ? "Force Un-eliminate" : "Force Eliminate"});
+    toggleBtn.addEventListener("click", async ()=>{
+      state.eliminationOverrides[p] = isElim ? "alive" : "eliminated";
+      await saveState();
+      renderAdmin();
+      renderDashboard();
+    });
+    row.appendChild(toggleBtn);
+    elimCard.appendChild(row);
+  });
+  const clearOverridesBtn = el("button",{class:"secondary",text:"Clear All Overrides",style:"margin-top:14px;"});
+  clearOverridesBtn.addEventListener("click", async ()=>{
+    state.eliminationOverrides = {};
+    await saveState();
+    renderAdmin();
+    renderDashboard();
+  });
+  elimCard.appendChild(clearOverridesBtn);
+  root.appendChild(elimCard);
+
+  const resetCard = el("div",{class:"card"});
+  resetCard.appendChild(el("h3",{text:"Reset League"}));
+  resetCard.appendChild(el("p",{class:"muted",text:"Clears every week's picks, results, and elimination overrides. Schedule and rosters are kept. This cannot be undone.",style:"margin-top:2px;margin-bottom:14px;"}));
+  const resetBtn = el("button",{class:"primary",text:"Reset All",style:"background:linear-gradient(135deg, var(--red-flag), #C0392B);"});
+  const resetMsg = el("div",{style:"margin-top:10px;"});
+  resetBtn.addEventListener("click", async ()=>{
+    if(!confirm("Are you sure you want to reset ALL picks, results, and player status? This cannot be undone.")) return;
+    const typed = prompt('Type CONFIRM (all caps) to proceed with the reset:');
+    resetMsg.innerHTML = "";
+    if(typed !== "CONFIRM"){
+      resetMsg.appendChild(el("div",{class:"status-msg status-err",text:"Reset cancelled — confirmation text didn't match."}));
+      return;
+    }
+    Object.values(state.weeks).forEach(wk=>{
+      PLAYERS.forEach(p=>{ wk.picks[p] = [null,null,null]; });
+      wk.boxscore = {};
+    });
+    state.eliminationOverrides = {};
+    const ok = await saveState();
+    resetMsg.appendChild(el("div",{class:"status-msg "+(ok?"status-ok":"status-err"),
+      text: ok ? "League reset complete." : "Reset applied locally but couldn't save: "+(lastSaveError||"unknown error")}));
+    renderAdmin();
+    renderDashboard();
+  });
+  resetCard.appendChild(resetBtn);
+  resetCard.appendChild(resetMsg);
+  root.appendChild(resetCard);
+}
+
+function renderAll(){
+  renderConnectionNote();
+  renderWeekBadge();
+  renderDashboard();
+  renderPicks();
+  renderRefresh();
+  renderAdmin();
+}
+
+const RENDER_FNS = {dashboard: renderDashboard, picks: renderPicks, refresh: renderRefresh, admin: renderAdmin};
+
+document.querySelectorAll("nav.tabs button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".tabpane").forEach(p=>p.style.display="none");
+    const pane = document.getElementById("tab-"+btn.dataset.tab);
+    pane.style.display="block";
+    if(btn.dataset.tab !== "admin") adminUnlocked = false;
+    try{
+      RENDER_FNS[btn.dataset.tab]();
+    }catch(err){
+      console.error("Render error on tab", btn.dataset.tab, err);
+      pane.innerHTML = "";
+      pane.appendChild(el("div",{class:"card"},[
+        el("div",{class:"status-msg status-err",text:"Something went wrong rendering this tab: "+(err && err.message ? err.message : err)})
+      ]));
+    }
+  });
+});
+
+(async function init(){
+  await loadState();
+  try{
+    renderAll();
+  }catch(err){
+    console.error("Initial render error", err);
+  }
+  if(docRef){
+    // One subscription for the life of the page: fires on every change any
+    // leaguemate makes, so all open views stay in sync without polling.
+    onSnapshot(docRef, (snap)=>{
+      if(savingInFlight > 0) return; // don't clobber an in-flight local edit
+      if(snap.exists() && snap.data() && typeof snap.data().json === "string"){
+        try{
+          state = JSON.parse(snap.data().json);
+        }catch(e){
+          console.error("Ignoring malformed shared state:", e && e.message);
+          return;
+        }
+        ensureWeek(state.currentWeek);
+        renderWeekBadge();
+        renderDashboard();
+      }
+    }, (err)=>{
+      console.error("Firestore subscription error:", err && err.code, err && err.message);
+    });
+  }
+})();
+</script>
+</body></html>
